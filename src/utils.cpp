@@ -8,12 +8,11 @@
 void utils::initScreen(GyverOLED<SSD1306_128x32> &oled)
 {
     oled.init();
+    // oled.setContrast(10);
     oled.clear();
     oled.update();
     oled.home();
-    oled.setScale(1);
-    oled.flipV(true);
-    oled.flipH(true);
+    oled.setScale(1);    
     oled.invertText(false);
     oled.autoPrintln(true);
 }
@@ -34,6 +33,8 @@ void utils::clear(GyverOLED<SSD1306_128x32> &oled)
     oled.update();
 }
 
+/* ---------------------------------------------------------------------------- */
+
 void utils::drawMenu(GyverOLED<SSD1306_128x32> &oled)
 {
     oled.println("Pod - " + Global::VERSION);
@@ -43,26 +44,41 @@ void utils::drawMenu(GyverOLED<SSD1306_128x32> &oled)
 
 void utils::drawFlashMenu(GyverOLED<SSD1306_128x32> &oled, utils::DataHandler &data, utils::Cursor &cursor)
 {
-    std::array<String, 3> dirs = utils::retrieveFileNames("/", 1);
+    Global::filenames = utils::retrieveFileNames("/", 1);
     unsigned int counter = 0;
-    for (unsigned int i = 0; i < dirs.size(); i++)
+    for (unsigned int i = 0; i < Global::filenames.size(); i++)
     {
-        if (dirs[i].length() != 0)
+        if (Global::filenames[i].length() != 0)
             counter++;
     }
 
     cursor.setMaxSelect(counter);
 
-    for (unsigned int i = 0; i < dirs.size(); i++)
+    for (unsigned int i = 0; i < Global::filenames.size(); i++)
     {
-        oled.println(dirs[i]);
+        oled.println(Global::filenames[i]);
     }
 }
 
 void utils::drawSDCardMenu(GyverOLED<SSD1306_128x32> &oled)
 {
-    oled.print("SDC Coming soon!");
+    oled.println("SDC coming soon!");
 }
+
+void utils::drawViewFlashDocs(GyverOLED<SSD1306_128x32> &oled, DataHandler &data, Cursor &cursor, unsigned int option)
+{
+    String filename = Global::filenames[option] + ".txt";
+    data.closeCurrentFile();
+    data.openNewFile(filename);
+    std::array<String, 3> content = data.getContents(1);
+    for (unsigned int i = 0; i < content.size(); i++)
+    {
+        oled.println(content[i]);
+    }
+}
+
+
+/* ---------------------------------------------------------------------------- */
 
 std::array<String, 3> utils::retrieveFileNames(String dirName, unsigned int pageNum)
 {
@@ -84,6 +100,8 @@ std::array<String, 3> utils::retrieveFileNames(String dirName, unsigned int page
     }
     return dirNames;
 }
+
+/* ---------------------------------------------------------------------------- */
 
 utils::Cursor::Cursor(unsigned int r, unsigned int x, unsigned int y, unsigned int maxSelect) : r(r), x(x), y(y), maxSelect(maxSelect), currentSelect(0), hasMovedUp(false), hasMovedDown(false) {}
 
@@ -139,6 +157,7 @@ void utils::Cursor::draw(GyverOLED<SSD1306_128x32> &oled)
 
     oled.circle(this->x, this->y, this->r, OLED_FILL);
 }
+/* ---------------------------------------------------------------------------- */
 
 bool utils::DataHandler::openNewFile(String filename)
 {
@@ -174,3 +193,5 @@ std::array<String, 3> utils::DataHandler::getContents(unsigned int pageNum)
     
     return this->lines;
 }
+
+/* ---------------------------------------------------------------------------- */

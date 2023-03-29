@@ -1,4 +1,5 @@
 #include "globals.hpp"
+#include <array>
 
 const unsigned int Global::PIN_DISPLAY_SDA = 16;
 const unsigned int Global::PIN_DISPLAY_SCL = 17;
@@ -26,3 +27,5 @@ const unsigned int Global::DEFAULT_CUR_Y = 5;
 
 const unsigned int Global::CUR_R = 1;
 const unsigned int Global::CUR_GAP = 8;
+
+std::array<String, 3> Global::filenames;

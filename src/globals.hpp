@@ -1,12 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
+#include <array>
 
 enum STATES : unsigned int
 {
     MainMenu = 1,
     FlashMenu,
     SDCardMenu,
+    ViewFlashDocs,
     Off
 };
 
@@ -44,4 +46,6 @@ struct Global
 
     static const unsigned int CUR_R;
     static const unsigned int CUR_GAP;
+
+    static std::array<String, 3> filenames;
 };

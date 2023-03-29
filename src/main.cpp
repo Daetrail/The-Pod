@@ -54,6 +54,11 @@ void loop()
             utils::drawSDCardMenu(oled);
             oled.update();
             break;
+        case STATES::ViewFlashDocs:
+            utils::clear(oled);
+            utils::drawViewFlashDocs(oled, data, cursor, optionSelected);
+            oled.update();
+            break;
         case STATES::Off:
             utils::clear(oled);
             break;
@@ -81,6 +86,17 @@ void loop()
         }
         break;
     case STATES::FlashMenu:
+        optionSelected = cursor.getSelected();
+        if (digitalRead(Global::SL_BUT) == LOW)
+        {
+            Global::CURRENT_STATE = STATES::ViewFlashDocs;
+            Global::PREVIOUS_STATE = STATES::FlashMenu;
+            drawLock = false;
+            delay(100);
+        }
+        break;
+    case STATES::ViewFlashDocs:
+        curLock = true;
         break;
     case STATES::SDCardMenu:
         curLock = true;
@@ -124,6 +140,8 @@ void loop()
             Global::CURRENT_STATE = Global::PREVIOUS_STATE;
             if (Global::CURRENT_STATE == STATES::FlashMenu || Global::CURRENT_STATE == STATES::SDCardMenu)
                 Global::PREVIOUS_STATE = STATES::MainMenu;
+            if (Global::CURRENT_STATE == STATES::ViewFlashDocs)
+                Global::PREVIOUS_STATE = STATES::FlashMenu;
             drawLock = false;
             tgLock = false;
             curLock = false;

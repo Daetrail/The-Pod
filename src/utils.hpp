@@ -44,6 +44,7 @@ namespace utils
 
     void drawMenu(GyverOLED<SSD1306_128x32> &oled);
     void drawFlashMenu(GyverOLED<SSD1306_128x32> &oled, DataHandler &data, Cursor &cursor);
+    void drawViewFlashDocs(GyverOLED<SSD1306_128x32> &oled, DataHandler &data, Cursor &cursor, unsigned int option);
     void drawSDCardMenu(GyverOLED<SSD1306_128x32> &oled);
 
     std::array<String, 3> retrieveFileNames(String dir, unsigned int pageNum);
