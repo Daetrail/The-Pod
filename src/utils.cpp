@@ -1,197 +1,133 @@
 #include <GyverOLED.h>
-#include <array>
+#include <Wire.h>
 #include <LittleFS.h>
+#include <vector>
+#include <SDFS.h>
+#include <SPI.h>
 
-#include "utils.hpp"
-#include "globals.hpp"
+#include "Utils.hpp"
+#include "Constants.hpp"
 
-void utils::initScreen(GyverOLED<SSD1306_128x32> &oled)
+void Utils::initDisplay(GyverOLED<SSD1306_128x32> &display)
 {
-    oled.init();
-    // oled.setContrast(10);
-    oled.clear();
-    oled.update();
-    oled.home();
-    oled.setScale(1);    
-    oled.invertText(false);
-    oled.autoPrintln(true);
+    display.init();
+    display.clear();
+    display.home();
+    display.setScale(1);    
+    display.invertText(false);
 }
 
-void utils::initButtons()
+void Utils::clearDisplay(GyverOLED<SSD1306_128x32> &display)
 {
-    pinMode(Global::UP_BUT, INPUT_PULLUP);
-    pinMode(Global::DN_BUT, INPUT_PULLUP);
-    pinMode(Global::SL_BUT, INPUT_PULLUP);
-    pinMode(Global::BK_BUT, INPUT_PULLUP);
-    pinMode(Global::TG_BUT, INPUT_PULLUP);
+    display.clear();
+    display.home();
 }
 
-void utils::clear(GyverOLED<SSD1306_128x32> &oled)
+void Utils::initButtons()
 {
-    oled.home();
-    oled.clear();
-    oled.update();
+    pinMode(Constants::PIN_UP, INPUT_PULLUP);
+    pinMode(Constants::PIN_DOWN, INPUT_PULLUP);
+    pinMode(Constants::PIN_SELECT, INPUT_PULLUP);
+    pinMode(Constants::PIN_BACK, INPUT_PULLUP);
+    pinMode(Constants::PIN_OFF, INPUT_PULLUP);
 }
 
-/* ---------------------------------------------------------------------------- */
-
-void utils::drawMenu(GyverOLED<SSD1306_128x32> &oled)
+void Utils::setI2CPins(unsigned int sda, unsigned int scl)
 {
-    oled.println("Pod - " + Global::VERSION);
-    oled.println("Flash");
-    oled.println("SD Card");
+    Wire.setSDA(sda);
+    Wire.setSCL(scl);
 }
 
-void utils::drawFlashMenu(GyverOLED<SSD1306_128x32> &oled, utils::DataHandler &data, utils::Cursor &cursor)
+void Utils::setSPIPins(unsigned int tx, unsigned int rx, unsigned int cs, unsigned int clk)
 {
-    Global::filenames = utils::retrieveFileNames("/", 1);
-    unsigned int counter = 0;
-    for (unsigned int i = 0; i < Global::filenames.size(); i++)
-    {
-        if (Global::filenames[i].length() != 0)
-            counter++;
-    }
-
-    cursor.setMaxSelect(counter);
-
-    for (unsigned int i = 0; i < Global::filenames.size(); i++)
-    {
-        oled.println(Global::filenames[i]);
-    }
+    SPI.setTX(tx);
+    SPI.setRX(rx);
+    SPI.setCS(cs);
+    SPI.setSCK(clk);
 }
 
-void utils::drawSDCardMenu(GyverOLED<SSD1306_128x32> &oled)
+std::vector<String> Utils::SDGetDirNames(String directory)
 {
-    oled.println("SDC coming soon!");
-}
-
-void utils::drawViewFlashDocs(GyverOLED<SSD1306_128x32> &oled, DataHandler &data, Cursor &cursor, unsigned int option)
-{
-    String filename = Global::filenames[option] + ".txt";
-    data.closeCurrentFile();
-    data.openNewFile(filename);
-    std::array<String, 3> content = data.getContents(1);
-    for (unsigned int i = 0; i < content.size(); i++)
-    {
-        oled.println(content[i]);
-    }
-}
+    Dir dir = SDFS.openDir(directory);
+    std::vector<String> dirNames;
 
 
-/* ---------------------------------------------------------------------------- */
-
-std::array<String, 3> utils::retrieveFileNames(String dirName, unsigned int pageNum)
-{
-    std::array<String, 3> dirNames;
-    Dir dir = LittleFS.openDir(dirName);
-    for (unsigned int i = 0; i < 3; i++)
-    {
-        if (pageNum - 1 > 0)
-        {
-            pageNum--;
-            i--;
-            dir.next();
-            continue;
+    while (dir.next())
+    {   
+        if (dir.isDirectory())
+        {   
+            if (dir.fileName() == "System Volume Information")
+                continue;
+            dirNames.push_back("/" + dir.fileName());
         }
-        dir.next();
-        String dname = dir.fileName();
-        dname.replace(".txt", "");
-        dirNames[i] = dname;
     }
+
     return dirNames;
 }
 
-/* ---------------------------------------------------------------------------- */
+std::vector<String> Utils::getFileNames(String directory, bool onSd)
+{   
+    Dir dir;
+    if (!onSd)
+        dir = LittleFS.openDir(directory);
+    else
+        dir = SDFS.openDir(directory);
 
-utils::Cursor::Cursor(unsigned int r, unsigned int x, unsigned int y, unsigned int maxSelect) : r(r), x(x), y(y), maxSelect(maxSelect), currentSelect(0), hasMovedUp(false), hasMovedDown(false) {}
 
-void utils::Cursor::setPos(unsigned int x, unsigned int y)
-{
-    this->x = x;
-    this->y = y;
-}
+    std::vector<String> fileNames;
 
-void utils::Cursor::setMaxSelect(unsigned int maxSelect)
-{
-    this->maxSelect = maxSelect;
-    this->currentSelect = 0;
-}
-
-void utils::Cursor::moveUp()
-{
-    if (this->currentSelect > 0)
+    while (dir.next())
     {
-        this->y -= Global::CUR_GAP;
-        this->currentSelect--;
-        this->hasMovedUp = true;
-    }
-}
-
-void utils::Cursor::moveDown()
-{
-    if (this->currentSelect < this->maxSelect - 1)
-    {
-        this->y += Global::CUR_GAP;
-        this->currentSelect++;
-        this->hasMovedDown = true;
-    }
-}
-
-unsigned int utils::Cursor::getSelected()
-{
-    return this->currentSelect;
-}
-
-void utils::Cursor::draw(GyverOLED<SSD1306_128x32> &oled)
-{
-    if (this->hasMovedDown)
-    {
-        oled.circle(this->x, this->y - Global::CUR_GAP, this->r, OLED_CLEAR);
-        this->hasMovedDown = false;
-    }
-    else if (this->hasMovedUp)
-    {
-        oled.circle(this->x, this->y + Global::CUR_GAP, this->r, OLED_CLEAR);
-        this->hasMovedUp = false;
+        fileNames.push_back(dir.fileName());
     }
 
-    oled.circle(this->x, this->y, this->r, OLED_FILL);
-}
-/* ---------------------------------------------------------------------------- */
-
-bool utils::DataHandler::openNewFile(String filename)
-{
-    if (!LittleFS.exists(filename))
-        return false;
-    
-    this->currentFile = LittleFS.open(filename, "r");
-    return true;
+    return fileNames;
 }
 
-void utils::DataHandler::closeCurrentFile()
+unsigned int Utils::getTotalLinesFromFile(String fullFileName, bool onSd)
 {
-    this->currentFile.close();
-}
+    File file;
+    if (!onSd)
+        file = LittleFS.open(fullFileName, "r");
+    else
+        file = SDFS.open(fullFileName, "r");
 
-std::array<String, 3> utils::DataHandler::getContents(unsigned int pageNum)
-{
-    for (unsigned int i = 0; i < 3; i++)
+
+    unsigned int counter = 0;
+    while (file.available())
     {
-        this->lines[i] = "00-00";
+        file.readStringUntil('\n');
+        counter++;
     }
-    for (unsigned int i = 0; i < 3 && this->currentFile.available() ; i++)
-    {   
+
+    file.close();
+    return counter;
+}
+
+std::array<String, 4> Utils::getDataFromFile(String fullFileName, unsigned int pageNum, bool onSd)
+{  
+    File file;
+    if (!onSd)
+        file = LittleFS.open(fullFileName, "r");
+    else
+        file = SDFS.open(fullFileName, "r");
+
+
+    std::array<String, 4> data;
+
+    for (unsigned int i = 0; i < Constants::DISPLAY_MAX_LINES; i++)
+    {
         if (pageNum - 1 > 0)
         {
             pageNum--;
             i--;
-            this->currentFile.readStringUntil('\n');
+            file.readStringUntil('\n');
             continue;
         }
-        this->lines[i] = this->currentFile.readStringUntil('\n');
+        data[i] = file.readStringUntil('\n');
     }
-    
-    return this->lines;
-}
 
-/* ---------------------------------------------------------------------------- */
+    file.close();
+
+    return data;
+}

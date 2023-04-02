@@ -1,151 +1,143 @@
-#include <Arduino.h>
 #include <GyverOLED.h>
-#include <Wire.h>
 #include <LittleFS.h>
+#include <vector>
+#include <SDFS.h>
+#include <SD.h>
 
-#include "globals.hpp"
-#include "utils.hpp"
+#include "States.hpp"
+#include "Constants.hpp"
+#include "Utils.hpp"
 
-GyverOLED<SSD1306_128x32> oled(Global::SCREEN_ADDRESS);
+#include "MainMenu.hpp"
+#include "FlashMenu.hpp"
+#include "ViewDoc.hpp"
+#include "SDCardMenu.hpp"
+#include "SDCardLevel2.hpp"
+#include "SDCardLevel3.hpp"
 
-bool tgLock = false;
-bool drawLock = false;
-bool curLock = false;
-unsigned int optionSelected;
+/* ----========----========----========----========---- */
 
-utils::Cursor cursor(Global::CUR_R, Global::MM_CUR_X, Global::MM_CUR_Y, Global::MM_MAX_SELECT);
-utils::DataHandler data;
+// Display
+GyverOLED<SSD1306_128x32> display(Constants::DISPLAY_ADDRESS);
+
+// States
+States currentState = States::MainMenu;
+States previousState = States::MainMenu;
+
+// Vector containing file names in FlashMenu and SDCardLevel3 states.
+std::vector<String> fileNames;
+
+// Vector containing the directory names for SDCardMenu state.
+std::vector<String> dirNames;
+
+// Vector containing the directory names for SDCardLevel2 state;
+std::vector<String> dirNamesL2;
+
+// Stores the index of the file in fileNames to be opened.
+unsigned int indexOfFile;
+
+// Stores the index of the directory in dirNames to be opened.
+unsigned int indexOfDir;
+
+// Stores the index of the directory in dirNamesL2 to be opened.
+unsigned int indexOfDirL2;
+
+// If the file being opened derives from FlashMenu or SDCardLevel3.
+bool onSd;
+
+// Stores the directory the file being opened is in.
+String fileDirectory;
+
+// File to be opened and read.
+String currentFileName;
+
+// Main menu
+MainMenu mainMenu(Constants::MM_CURSOR_X, Constants::MM_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, Constants::MM_MAX_SELECT);
+
+// Flash menu
+FlashMenu flashMenu(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
+
+// View Doc
+ViewDoc viewDoc(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::scrolling);
+
+// SDCardMenu
+SDCardMenu sdCardMenu(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
+
+// SDCardLevel2
+SDCardLevel2 sdCardLevel2(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
+
+// SDCardLevel3
+SDCardLevel3 sdCardLevel3(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
+
+/* ----========----========----========----========---- */
 
 void setup()
 {
-    Wire.setSDA(Global::PIN_DISPLAY_SDA);
-    Wire.setSCL(Global::PIN_DISPLAY_SCL);
+    // Setup buttons
+    Utils::initButtons();
 
-    Serial.begin(Global::SERIAL_BAUD_RATE);
+    // Set I2C pins
+    Utils::setI2CPins(Constants::PIN_DISPLAY_SDA, Constants::PIN_DISPLAY_SCL);
 
+    // Set SPI pins
+    Utils::setSPIPins(Constants::PIN_SPI_TX, Constants::PIN_SPI_RX, Constants::PIN_SPI_CS, Constants::PIN_SPI_CLK);
+
+    // Initialise display.
+    Utils::initDisplay(display);
+
+    // Set baud rate of serial connection to the specified baud rate.
+    Serial.begin(Constants::SERIAL_BAUD_RATE);
+
+    // Init LittleFS for flash storage.
     LittleFS.begin();
 
-    utils::initButtons();
-    utils::initScreen(oled);
+    // Set the CS pin in the SDFS config.
+    SDFSConfig config;
+    config.setCSPin(Constants::PIN_SPI_CS);
+    SDFS.setConfig(config);
+
+    // Mounts filesystem of SD Card.
+    SDFS.begin();
+
+    delay(500);
 }
+
+/* ----========----========----========----========---- */
 
 void loop()
 {
-    if (!drawLock)
+    switch (currentState)
     {
-        switch (Global::CURRENT_STATE)
-        {
-        case STATES::MainMenu:
-            cursor.setMaxSelect(Global::MM_MAX_SELECT);
-            cursor.setPos(Global::MM_CUR_X, Global::MM_CUR_Y);
-            utils::clear(oled);
-            utils::drawMenu(oled);
-            oled.update();
+        case States::MainMenu:
+            mainMenu.update(currentState, previousState, display);
+            mainMenu.draw(display);
             break;
-        case STATES::FlashMenu:
-            cursor.setPos(Global::DEFAULT_CUR_X, Global::DEFAULT_CUR_Y);
-            curLock = false;
-            utils::clear(oled);
-            utils::drawFlashMenu(oled, data, cursor);
-            oled.update();
+        case States::FlashMenu:
+            flashMenu.draw(display, fileNames);
+            flashMenu.update(currentState, previousState, display, indexOfFile, fileDirectory, onSd);
             break;
-        case STATES::SDCardMenu:
-            utils::clear(oled);
-            utils::drawSDCardMenu(oled);
-            oled.update();
+        case States::ViewDoc:
+            if (!onSd)
+                currentFileName = fileDirectory + fileNames[indexOfFile];
+            else
+                currentFileName = dirNames[indexOfDir] + dirNamesL2[indexOfDirL2] + "/" + fileNames[indexOfFile];
+            viewDoc.draw(display, currentFileName, onSd);
+            viewDoc.update(currentState, previousState, display);
             break;
-        case STATES::ViewFlashDocs:
-            utils::clear(oled);
-            utils::drawViewFlashDocs(oled, data, cursor, optionSelected);
-            oled.update();
+        case States::SDCardMenu:
+            sdCardMenu.draw(display, dirNames);
+            sdCardMenu.update(currentState, previousState, display, indexOfDir);
             break;
-        case STATES::Off:
-            utils::clear(oled);
+        case States::SDCardLevel2:
+            sdCardLevel2.draw(display, dirNames, dirNamesL2, indexOfDir);
+            sdCardLevel2.update(currentState, previousState, display, indexOfDirL2);
             break;
-        }
-        drawLock = true;
+        case States::SDCardLevel3:
+            sdCardLevel3.draw(display, fileNames, dirNames, dirNamesL2, indexOfDir, indexOfDirL2);
+            sdCardLevel3.update(currentState, previousState, display, indexOfFile, onSd);
+            break;
     }
-
-    switch (Global::CURRENT_STATE)
-    {
-    case STATES::MainMenu:
-        optionSelected = cursor.getSelected();
-        if (digitalRead(Global::SL_BUT) == LOW && optionSelected == MM_SELECT::Flash)
-        {
-            Global::CURRENT_STATE = STATES::FlashMenu;
-            Global::PREVIOUS_STATE = STATES::MainMenu;
-            drawLock = false;
-            delay(100);
-        }
-        if (digitalRead(Global::SL_BUT) == LOW && optionSelected == MM_SELECT::SDCard)
-        {
-            Global::CURRENT_STATE = STATES::SDCardMenu;
-            Global::PREVIOUS_STATE = STATES::MainMenu;
-            drawLock = false;
-            delay(100);
-        }
-        break;
-    case STATES::FlashMenu:
-        optionSelected = cursor.getSelected();
-        if (digitalRead(Global::SL_BUT) == LOW)
-        {
-            Global::CURRENT_STATE = STATES::ViewFlashDocs;
-            Global::PREVIOUS_STATE = STATES::FlashMenu;
-            drawLock = false;
-            delay(100);
-        }
-        break;
-    case STATES::ViewFlashDocs:
-        curLock = true;
-        break;
-    case STATES::SDCardMenu:
-        curLock = true;
-        break;
-    }
-
-    if (!curLock)
-    {
-        cursor.draw(oled);
-        oled.update();
-        curLock = true;
-    }
-
-    if (digitalRead(Global::UP_BUT) == LOW)
-    {
-        cursor.moveUp();
-        curLock = false;
-        delay(100);
-    }
-
-    if (digitalRead(Global::DN_BUT) == LOW)
-    {
-        cursor.moveDown();
-        curLock = false;
-        delay(100);
-    }
-
-    if (digitalRead(Global::TG_BUT) == LOW && !tgLock)
-    {
-        Global::PREVIOUS_STATE = Global::CURRENT_STATE;
-        Global::CURRENT_STATE = STATES::Off;
-        tgLock = true;
-        drawLock = false;
-        delay(100);
-    }
-
-    if (digitalRead(Global::BK_BUT) == LOW)
-    {
-        if (Global::CURRENT_STATE != STATES::MainMenu)
-        {
-            Global::CURRENT_STATE = Global::PREVIOUS_STATE;
-            if (Global::CURRENT_STATE == STATES::FlashMenu || Global::CURRENT_STATE == STATES::SDCardMenu)
-                Global::PREVIOUS_STATE = STATES::MainMenu;
-            if (Global::CURRENT_STATE == STATES::ViewFlashDocs)
-                Global::PREVIOUS_STATE = STATES::FlashMenu;
-            drawLock = false;
-            tgLock = false;
-            curLock = false;
-            delay(100);
-        }
-    }
+    // Serial.println(String(rp2040.getUsedHeap()) + "/" + String(rp2040.getTotalHeap()));
 }
+
+/* ----========----========----========----========---- */
