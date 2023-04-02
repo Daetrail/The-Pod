@@ -1,30 +1,58 @@
-How-to-use 
-The Pod 
-stores files 
-with text 
-inside them. 
-However 
-there are 
-some 
-conventions which 
-need 
-to be followed 
-when 
-creating your own 
-files. 
+How-to-use
+The 
+Pod
+stores files
+with 
+text
+inside 
+them.
+However
+there 
+are
+some
+conventions 
+which
+need
+to be 
+followed
+when
+creating your 
+own
+files.
 
-A program will be 
-provided externally 
-in 
-order to convert 
-text 
-files into the 
-desired 
-format of The 
-Pod. 
-Each 
-document MUST 
-be 
-concise, short and 
-specific. 
-(created by kitsah)
+A program will 
+be
+provided 
+externally
+in
+order to 
+convert
+text
+files into 
+the
+desired
+format of 
+The
+Pod.
+Each
+document 
+MUST
+be
+concise, short 
+and
+specific.
+
+Each file must have a 
+disposable line as 
+the final line of the 
+text.
+This is due to a 
+certain bug in the 
+code, where the final 
+line would take much 
+longer to load.
+This 
+is automatically done 
+by the text 
+formatter. 
+DISPOSABLE

@@ -88,16 +88,47 @@ void setup()
     // Set baud rate of serial connection to the specified baud rate.
     Serial.begin(Constants::SERIAL_BAUD_RATE);
 
-    // Init LittleFS for flash storage.
-    LittleFS.begin();
-
     // Set the CS pin in the SDFS config.
     SDFSConfig config;
     config.setCSPin(Constants::PIN_SPI_CS);
     SDFS.setConfig(config);
 
-    // Mounts filesystem of SD Card.
-    SDFS.begin();
+    Utils::clearDisplay(display);
+
+    display.println("Mounting FS...");
+
+    display.update();
+
+    bool sd = SDFS.begin();
+    bool flash = LittleFS.begin();
+
+    if (!flash && !sd)
+    {
+        Utils::clearDisplay(display);
+        display.println("Failed to mount!:");
+        display.println("SD Card & Flash");
+        display.println("Ensure SD card is plugged in.");
+        display.update();
+        for (;;) {}
+    }
+    else if (!sd)
+    {
+        Utils::clearDisplay(display);
+        display.println("Failed to mount!:");
+        display.println("SD Card");
+        display.println("SD card plugged in?");
+        display.update();
+        for (;;) {}
+    }
+    else if (!flash)
+    {
+        Utils::clearDisplay(display);
+        display.println("Failed to mount!:");
+        display.println("Flash");
+        display.println("Board may be defected.");
+        display.update();
+        for (;;) {}
+    }
 
     delay(500);
 }

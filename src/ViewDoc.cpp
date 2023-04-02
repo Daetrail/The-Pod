@@ -72,7 +72,7 @@ void ViewDoc::draw(GyverOLED<SSD1306_128x32> &display, String fileName, bool onS
             this->totalLines = Utils::getTotalLinesFromFile(fileName, onSd);
             if (this->totalLines != 0)
             {
-                this->cursor.setMaxSelect(totalLines);
+                this->cursor.setMaxSelect(totalLines - 1); // Last line loads very slowly in larger files, so its omitted.
             }
             else
                 this->cursor.setMaxSelect(Constants::DISPLAY_MAX_LINES);

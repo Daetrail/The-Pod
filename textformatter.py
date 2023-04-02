@@ -10,10 +10,11 @@ def main():
     result = ""
 
     filename = ""
-    if len(sys.argv) == 0 or len(sys.argv) > 1:
+    if len(sys.argv) == 1 or len(sys.argv) > 2:
         print("ERROR! Provide a file and ensure only one file is provided!")
+        sys.exit()
     else:
-        filename = sys.argv[0]
+        filename = sys.argv[1]
     
     with open(filename, "r+") as f:
         consumed_pixels = 0
@@ -65,7 +66,8 @@ def main():
                 # Pixels of word + pixel length of a space (" ")
                 consumed_pixels += pixels + PIXELS_PER_LETTER
                         
-        
+        result += "\nDISPOSABLE"
+
         f.seek(0)
         f.truncate(0)
         f.write(result)
