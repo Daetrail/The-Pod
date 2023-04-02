@@ -65,7 +65,7 @@ void Cursor::moveDown()
     {
         if (this->type == CursorType::unlimitedSelection)
         {
-            if (this->maxSelect <= this->maxLines && this->maxSelect != 1)
+            if (this->maxSelect <= this->maxLines)
             {
                 if (this->currentlySelected < this->maxSelect - 1)
                 {
