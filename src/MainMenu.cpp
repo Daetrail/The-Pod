@@ -56,9 +56,12 @@ void MainMenu::update(States &currentState, States &previousState, GyverOLED<SSD
 
     if (digitalRead(Constants::PIN_BACK) == LOW)
     {
-        this->isOff = false;
-        this->drawLock = false;
-        delay(100);
+        if (this->isOff)
+        {
+            this->isOff = false;
+            this->drawLock = false;
+            delay(100);
+        }    
     }
 
 }

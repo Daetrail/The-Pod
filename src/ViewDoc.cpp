@@ -84,10 +84,10 @@ void ViewDoc::draw(GyverOLED<SSD1306_128x32> &display, String fileName, bool onS
         // std::time_t d = std::time(0);
         // Serial.println("PAGE " + String(this->cursor.getPage()) + ": " + String(static_cast<unsigned int>(d) - static_cast<unsigned int>(t)) + "s");
 
+        Utils::clearDisplay(display);
 
         if (this->totalLines != 0)
         {
-            Utils::clearDisplay(display);
             for (unsigned int i = 0; i < data.size(); i++)
             {   
                 display.println(data[i]);
@@ -95,9 +95,7 @@ void ViewDoc::draw(GyverOLED<SSD1306_128x32> &display, String fileName, bool onS
         }
         else
         {
-            Utils::clearDisplay(display);
             display.println("File has no data.");
-            display.update();
         }
             
         display.update();

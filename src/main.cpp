@@ -140,8 +140,8 @@ void loop()
     switch (currentState)
     {
         case States::MainMenu:
-            mainMenu.update(currentState, previousState, display);
             mainMenu.draw(display);
+            mainMenu.update(currentState, previousState, display);
             break;
         case States::FlashMenu:
             flashMenu.draw(display, fileNames);
