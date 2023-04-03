@@ -4,10 +4,10 @@ A little device made for cheating in exams and class tests! You can upload files
 
 ## Concept
 
-The primary idea behind this subject was to:
+The primary idea behind this project was to:
 
-- Replace the solar panel in a calculator with a display.
-- Hijack the buttons in the calculator in order to control the device.
+- Replace the solar panel in a calculator with a display,
+- Hijack the buttons in the calculator in order to control the device,
 - Install a small battery and an SD card reader to power the device and store data for it.
 
 A button to quickly toggle the device's screen was implemented, in order to avoid detection by exam invigilators or teachers.
