@@ -40,12 +40,20 @@ void Cursor::moveUp()
                     this->currentPage--;
                     this->currentlySelected--;
                 }
+                else if (this->maxPages != 1)
+                {
+                    this->currentPage = this->maxPages;
+                    this->y = this->originalY + this->gap * (this->maxLines - 1);
+                    this->currentlySelected = this->maxSelect - 1;
+                }
             }
         }
         else
         {
             if (this->currentPage != 1)
                 this->currentPage--;
+            else
+                this->currentPage = this->maxPages;
         }
     }
 }
@@ -95,11 +103,19 @@ void Cursor::moveDown()
                 this->currentlySelected++;
                 this->hasMovedDown = true;
             }
+            else
+            {
+                this->currentPage = 1;
+                this->y = this->originalY;
+                this->currentlySelected = 0;
+            }
         }
         else
         {
             if (this->currentPage < this->maxPages)
                 this->currentPage++;
+            else
+                this->currentPage = 1;
         }
     }
 }

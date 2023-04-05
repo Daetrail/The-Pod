@@ -14,6 +14,9 @@
 #include "SDCardMenu.hpp"
 #include "SDCardLevel2.hpp"
 #include "SDCardLevel3.hpp"
+#include "GameMenu.hpp"
+
+#include "Snake/SnakeGame.hpp"
 
 /* ----========----========----========----========---- */
 
@@ -69,6 +72,14 @@ SDCardLevel2 sdCardLevel2(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR
 // SDCardLevel3
 SDCardLevel3 sdCardLevel3(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
 
+// Game Menu
+GameMenu gameMenu(Constants::DEFAULT_CURSOR_X, Constants::DEFAULT_CURSOR_Y, Constants::DEFAULT_CURSOR_R, Constants::CURSOR_GAP, Constants::DISPLAY_MAX_LINES, CursorType::unlimitedSelection);
+
+/* ----========----========----========----========---- */
+// GAMES //
+
+SnakeGame snakeGame(SnakeGameConstants::DEFAULT_CELL_SPACING, Constants::FRAME_RATE);
+
 /* ----========----========----========----========---- */
 
 void setup()
@@ -108,6 +119,7 @@ void setup()
         display.println("Failed to mount!:");
         display.println("SD Card & Flash");
         display.println("Ensure SD card is plugged in.");
+        display.println("Board may be defected.");
         display.update();
         for (;;) {}
     }
@@ -117,8 +129,13 @@ void setup()
         display.println("Failed to mount!:");
         display.println("SD Card");
         display.println("SD card plugged in?");
+        display.println("Press SEL to proceed.");
         display.update();
-        for (;;) {}
+        for (;;)
+        {
+            if (digitalRead(Constants::PIN_SELECT) == LOW)
+                break;
+        }
     }
     else if (!flash)
     {
@@ -130,7 +147,7 @@ void setup()
         for (;;) {}
     }
 
-    delay(500);
+    delay(100);
 }
 
 /* ----========----========----========----========---- */
@@ -166,6 +183,14 @@ void loop()
         case States::SDCardLevel3:
             sdCardLevel3.draw(display, fileNames, dirNames, dirNamesL2, indexOfDir, indexOfDirL2);
             sdCardLevel3.update(currentState, previousState, display, indexOfFile, onSd);
+            break;
+        case States::GameMenu:
+            gameMenu.draw(display);
+            gameMenu.update(currentState, previousState, display);
+            break;
+        case States::GameSnake:
+            snakeGame.update(currentState, 10);
+            snakeGame.draw(display);
             break;
     }
     // Serial.println(String(rp2040.getUsedHeap()) + "/" + String(rp2040.getTotalHeap()));

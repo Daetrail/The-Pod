@@ -55,4 +55,5 @@ This
 is automatically done 
 by the text 
 formatter. 
+- - END - -
 DISPOSABLE

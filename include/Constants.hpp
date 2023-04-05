@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 struct Constants
 {
     // Declares the GPIO pin for I2C communication.
@@ -42,4 +44,14 @@ struct Constants
 
     // Maximum lines display can show.
     static const unsigned int DISPLAY_MAX_LINES;
+
+    // List of games to play.
+    static const std::array<String, 3> GAMES_AVAILABLE;
+
+    // Defines the limits of the display.
+    static const unsigned int DISPLAY_WIDTH;
+    static const unsigned int DISPLAY_HEIGHT;
+
+    // Defines the maximum FPS for games.
+    static const unsigned int FRAME_RATE;
 };

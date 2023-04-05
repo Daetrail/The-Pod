@@ -1,3 +1,6 @@
+#include <array>
+#include <Arduino.h>
+
 #include "Constants.hpp"
 
 /* ----========----========----========----========---- */
@@ -35,7 +38,7 @@ const unsigned int Constants::MM_CURSOR_Y = 12;
 
 /* ----========----========----========----========---- */
 
-const unsigned int Constants::MM_MAX_SELECT = 2;
+const unsigned int Constants::MM_MAX_SELECT = 3;
 
 /* ----========----========----========----========---- */
 
@@ -52,4 +55,19 @@ const unsigned int Constants::CURSOR_GAP = 8;
 const unsigned int Constants::DISPLAY_MAX_LINES = 4;
 
 /* ----========----========----========----========---- */
+
+const std::array<String, 3> Constants::GAMES_AVAILABLE = {"Snake", "Pong(dev)", "Space Invaders(dev)"};
+
+/* ----========----========----========----========---- */
+
+const unsigned int Constants::DISPLAY_WIDTH = 128;
+const unsigned int Constants::DISPLAY_HEIGHT = 32;
+
+/* ----========----========----========----========---- */
+
+const unsigned int Constants::FRAME_RATE = 30;
+
+/* ----========----========----========----========---- */
+
+
 

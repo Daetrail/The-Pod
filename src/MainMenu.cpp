@@ -44,6 +44,13 @@ void MainMenu::update(States &currentState, States &previousState, GyverOLED<SSD
             this->drawLock = false;
             delay(100);
         }
+        else if (digitalRead(Constants::PIN_SELECT) == LOW && optionSelected == static_cast<unsigned int>(MainMenuSelection::Game))
+        {
+            previousState = currentState;
+            currentState = States::GameMenu;
+            this->drawLock = false;
+            delay(100);
+        }
     }
 
     if (digitalRead(Constants::PIN_OFF) == LOW)
@@ -74,6 +81,7 @@ void MainMenu::draw(GyverOLED<SSD1306_128x32> &display)
         display.println("Daetrail's Pod");
         display.println("Flash");
         display.println("SD Card");
+        display.println("Games");
         this->cursor.draw(display);
         display.update();
         this->drawLock = true;

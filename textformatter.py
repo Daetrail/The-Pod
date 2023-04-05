@@ -66,7 +66,8 @@ def main():
                 # Pixels of word + pixel length of a space (" ")
                 consumed_pixels += pixels + PIXELS_PER_LETTER
                         
-        result += "\nDISPOSABLE"
+        result = result.strip()
+        result += "\n- - END - -\nDISPOSABLE"
 
         f.seek(0)
         f.truncate(0)

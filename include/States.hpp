@@ -8,12 +8,17 @@ enum class States : unsigned int
     SDCardMenu,
     ViewDoc,
     SDCardLevel2,
-    SDCardLevel3
+    SDCardLevel3,
+    GameMenu,
+    GameSnake,
+    GamePong,
+    GameSpaceInvaders
 };
 
 // Defines what can be selected on the main menu.
 enum class MainMenuSelection : unsigned int
 {
     Flash,
-    SDCard
+    SDCard,
+    Game
 };
