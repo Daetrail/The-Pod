@@ -4,6 +4,7 @@
 
 #include "Snake/Snake.hpp"
 #include "Snake/Fruit.hpp"
+#include "States.hpp"
 
 struct SnakeGameConstants
 {
